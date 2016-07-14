@@ -6,6 +6,15 @@ image_resource:
   source:
     repository: 140.211.168.166:5000/golang1.6
 
+params:
+  S3_TESTING_ACCESS_KEY_ID:
+  S3_TESTING_SECRET_ACCESS_KEY:
+  S3_TESTING_BUCKET:
+  S3_VERSIONED_TESTING_BUCKET:
+  S3_TESTING_REGION:
+  S3_ENDPOINT:
+
+
 inputs:
 - name: s3-resource
   path: gopath/src/github.com/concourse/s3-resource

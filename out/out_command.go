@@ -3,6 +3,7 @@ package out
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,21 +11,34 @@ import (
 
 	"github.com/concourse/s3-resource"
 	"github.com/concourse/s3-resource/versions"
+	"github.com/fatih/color"
 )
 
 var ErrObjectVersioningNotEnabled = errors.New("object versioning not enabled")
+var ErrorColor = color.New(color.FgWhite, color.BgRed, color.Bold)
+var BlinkingErrorColor = color.New(color.BlinkSlow, color.FgWhite, color.BgRed, color.Bold)
+
+func init() {
+	ErrorColor.EnableColor()
+}
 
 type OutCommand struct {
+	stderr   io.Writer
 	s3client s3resource.S3Client
 }
 
-func NewOutCommand(s3client s3resource.S3Client) *OutCommand {
+func NewOutCommand(stderr io.Writer, s3client s3resource.S3Client) *OutCommand {
 	return &OutCommand{
+		stderr:   stderr,
 		s3client: s3client,
 	}
 }
 
 func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutResponse, error) {
+	if request.Params.From != "" || request.Params.To != "" {
+		command.printDeprecationWarning()
+	}
+
 	if ok, message := request.Source.IsValid(); !ok {
 		return OutResponse{}, errors.New(message)
 	}
@@ -40,10 +54,17 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 	remotePath := command.remotePath(request, localPath, sourceDir)
 
 	bucketName := request.Source.Bucket
+
+	acl := "private"
+	if request.Params.Acl != "" {
+		acl = request.Params.Acl
+	}
+
 	versionID, err := command.s3client.UploadFile(
 		bucketName,
 		remotePath,
 		localPath,
+		acl,
 	)
 	if err != nil {
 		return OutResponse{}, err
@@ -141,4 +162,13 @@ func (command *OutCommand) metadata(bucketName, remotePath string, private bool,
 	}
 
 	return metadata
+}
+
+func (command *OutCommand) printDeprecationWarning() {
+	errorColor := ErrorColor.SprintFunc()
+	blinkColor := BlinkingErrorColor.SprintFunc()
+	command.stderr.Write([]byte(blinkColor("WARNING:")))
+	command.stderr.Write([]byte("\n"))
+	command.stderr.Write([]byte(errorColor("Parameters 'from/to' are deprecated, use 'file' instead")))
+	command.stderr.Write([]byte("\n\n"))
 }

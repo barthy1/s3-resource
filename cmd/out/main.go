@@ -19,18 +19,20 @@ func main() {
 
 	sourceDir := os.Args[1]
 
-	client, err := s3resource.NewS3Client(
-		os.Stderr,
+	awsConfig := s3resource.NewAwsConfig(
 		request.Source.AccessKeyID,
 		request.Source.SecretAccessKey,
 		request.Source.RegionName,
 		request.Source.Endpoint,
+		request.Source.DisableSSL,
 	)
-	if err != nil {
-		s3resource.Fatal("building S3 client", err)
-	}
 
-	command := out.NewOutCommand(client)
+	client := s3resource.NewS3Client(
+		os.Stderr,
+		awsConfig,
+	)
+
+	command := out.NewOutCommand(os.Stderr, client)
 	response, err := command.Run(sourceDir, request)
 	if err != nil {
 		s3resource.Fatal("running command", err)

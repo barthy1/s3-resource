@@ -12,16 +12,18 @@ func main() {
 	var request check.CheckRequest
 	inputRequest(&request)
 
-	client, err := s3resource.NewS3Client(
-		os.Stderr,
+	awsConfig := s3resource.NewAwsConfig(
 		request.Source.AccessKeyID,
 		request.Source.SecretAccessKey,
 		request.Source.RegionName,
 		request.Source.Endpoint,
+		request.Source.DisableSSL,
 	)
-	if err != nil {
-		s3resource.Fatal("building S3 client", err)
-	}
+
+	client := s3resource.NewS3Client(
+		os.Stderr,
+		awsConfig,
+	)
 
 	command := check.NewCheckCommand(client)
 	response, err := command.Run(request)

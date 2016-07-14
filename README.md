@@ -5,13 +5,13 @@ version numbers.
 
 ## Source Configuration
 
-* `access_key_id`: *Required.* The AWS access key to use when accessing the
+* `bucket`: *Required.* The name of the bucket.
+
+* `access_key_id`: *Optional.* The AWS access key to use when accessing the
   bucket.
 
-* `secret_access_key`: *Required.* The AWS secret key to use when accessing
+* `secret_access_key`: *Optional.* The AWS secret key to use when accessing
   the bucket.
-
-* `bucket`: *Required.* The name of the bucket.
 
 * `region_name`: *Optional.* The region the bucket is in. Defaults to
   `us-east-1`.
@@ -25,13 +25,16 @@ version numbers.
 
 * `endpoint`: *Optional.* Custom endpoint for using S3 compatible provider.
 
+* `disable_ssl`: *Optional.* Disable SSL for the endpoint, useful for S3 compatible providers without SSL.
+
 ### File Names
 
 One of the following two options must be specified:
 
 * `regexp`: *Optional.* The pattern to match filenames against within S3. The first
   grouped match is used to extract the version, or if a group is explicitly
-  named `version`, that group is used.
+  named `version`, that group is used. At least one capture group must be
+  specified, with parentheses.
 
   The version extracted from this pattern is used to version the resource.
   Semantic versions, or just numbers, are supported. Accordingly, full regular
@@ -82,6 +85,9 @@ a new version of that file.
   in the resource definition. The matching syntax is bash glob expansion, so
   no capture groups, etc.
 
+* `acl`: *Optional.*  [Canned Acl](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
+  for the uploaded object.
+
 ## Example Configuration
 
 ### Resource
@@ -106,6 +112,7 @@ a new version of that file.
 - put: release
   params:
     file: path/to/release-*.tgz
+    acl: public-read
 ```
 
 ## Required IAM Permissions
@@ -113,6 +120,7 @@ a new version of that file.
 ### Non-versioned Buckets
 
 * `s3:PutObject`
+* `s3:PutObjectAcl`
 * `s3:GetObject`
 * `s3:ListBucket`
 
@@ -123,6 +131,7 @@ Everything above and...
 * `s3:GetBucketVersioning`
 * `s3:GetObjectVersion`
 * `s3:ListBucketVersions`
+* `s3:PutObjectVersionAcl`
 
 ## Developing on this resource
 
