@@ -1,0 +1,5 @@
+FROM ppc64le/ubuntu:trusty
+
+RUN apt-get update \
+    && apt-get install -y ca-certificates ca-certificates-java
+ADD assets/ /opt/resource/
